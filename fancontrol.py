@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import time
 import RPi.GPIO as GPIO
 
@@ -25,6 +26,9 @@ def get_temp():
         raise RuntimeError('Could not parse temperature output: {}'.format(e))
 
 if __name__ == '__main__':
+    debug = '-p' in sys.argv
+    if not debug: print('Run with -p to print info')
+
     # Validate the on and off thresholds
     if OFF_THRESHOLD >= ON_THRESHOLD:
         raise RuntimeError('OFF_THRESHOLD must be less than ON_THRESHOLD')
@@ -35,6 +39,9 @@ if __name__ == '__main__':
     while True:
         temp = get_temp()
         value = GPIO.input(GPIO_PIN)
+        
+        if debug:
+            print('temp: {}, fan: {}'.format(temp, "ON" if value else "OFF"))
 
         # Start the fan if the temperature has reached the limit and the fan
         # isn't already running.
