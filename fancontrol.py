@@ -39,7 +39,7 @@ if __name__ == '__main__':
     while True:
         temp = get_temp()
         value = GPIO.input(GPIO_PIN)
-        
+
         if debug:
             print('temp: {}, fan: {}'.format(temp, "ON" if value else "OFF"))
 
