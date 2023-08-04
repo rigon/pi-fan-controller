@@ -26,22 +26,30 @@ def get_temp():
         raise RuntimeError('Could not parse temperature output: {}'.format(e))
 
 if __name__ == '__main__':
-    debug = '-p' in sys.argv
-    if not debug: print('Run with -p to print info')
+    daemon = '-d' in sys.argv   # Daemon mode
+    debug = '-p' in sys.argv    # Print info every interval
+
+    print('ON_THRESHOLD = {}\'C\nOFF_THRESHOLD = {}\'C\nSLEEP_INTERVAL = {}s\nGPIO_PIN = {}'
+        .format(ON_THRESHOLD, OFF_THRESHOLD, SLEEP_INTERVAL, GPIO_PIN))
+
+    if not debug and daemon:    # Help
+        print('Run with -p to print info every interval')
 
     # Validate the on and off thresholds
     if OFF_THRESHOLD >= ON_THRESHOLD:
         raise RuntimeError('OFF_THRESHOLD must be less than ON_THRESHOLD')
 
     GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
     GPIO.setup(GPIO_PIN, GPIO.OUT)
+    GPIO.setwarnings(True)
 
     while True:
         temp = get_temp()
         value = GPIO.input(GPIO_PIN)
 
-        if debug:
-            print('temp: {}, fan: {}'.format(temp, "ON" if value else "OFF"))
+        if debug or not daemon:
+            print('temp: {}\'C, fan: {}'.format(temp, "ON" if value else "OFF"))
 
         # Start the fan if the temperature has reached the limit and the fan
         # isn't already running.
@@ -53,5 +61,7 @@ if __name__ == '__main__':
         # to 10 degrees below the limit.
         elif value == GPIO.HIGH and temp < OFF_THRESHOLD:
             GPIO.output(GPIO_PIN, GPIO.LOW)  # Turn the fan off
+
+        if not daemon: break
 
         time.sleep(SLEEP_INTERVAL)
